@@ -1,0 +1,342 @@
+ Registro de Visitas Técnicas Agrícolas
+
+Aplicativo mobile desenvolvido em **React Native com Expo e TypeScript** para gerenciamento e registro de visitas técnicas agrícolas.
+
+O sistema permite selecionar produtores, iniciar visitas com registro de localização GPS, verificar a precisão da localização, registrar evidências fotográficas e consultar o histórico das visitas realizadas.
+
+ Sobre o projeto
+
+O objetivo do projeto é criar uma solução simples, rápida e confiável para registrar visitas técnicas em campo.
+
+O aplicativo foi desenvolvido considerando um cenário com uma grande quantidade de contatos, utilizando banco de dados local e técnicas de otimização para manter o desempenho da aplicação.
+
+Atualmente, o sistema trabalha com 5.248 contatos cadastrados.
+
+Funcionalidades
+Contatos
+
+ Cadastro de mais de 5.000 contatos.
+ Busca de produtores diretamente no banco SQLite.
+ Pesquisa pelo nome utilizando SQL.
+Ordenação dos resultados.
+Carregamento paginado dos contatos.
+Carregamento sob demanda conforme o usuário percorre a lista.
+
+Registro de visitas
+
+ Seleção do produtor.
+ Início e finalização da visita.
+ Registro automático da data e horário.
+ Cálculo da duração da visita.
+ Registro das coordenadas GPS.
+ Registro da precisão da localização.
+Registro fotográfico através da câmera do dispositivo.
+Indicador de precisão GPS
+
+A precisão da localização é apresentada visualmente:
+
+ Cor          Precisão                         
+ 🟢 Verde     Alta precisão — menos de 10 m    
+ 🟡 Amarelo   Precisão moderada — de 10 a 30 m 
+ 🔴 Vermelho  Baixa precisão — acima de 30 m   
+Histórico
+
+As visitas concluídas são armazenadas localmente e podem ser consultadas posteriormente.
+
+O histórico apresenta:
+
+ Produtor
+ Fazenda
+ Cidade
+ Data e horário
+ Duração da visita
+ Coordenadas
+ Precisão do GPS
+ Foto registrada durante a visita.
+
+ Otimização para grandes volumes de dados
+
+Um dos principais requisitos do projeto foi trabalhar com uma quantidade superior a 5.000 contatos sem comprometer o desempenho da aplicação.
+
+Para isso, foram utilizadas algumas estratégias.
+
+SQLite
+
+Os contatos são armazenados em um banco SQLite local.
+
+sql
+CREATE TABLE IF NOT EXISTS contacts (
+  id INTEGER PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  farm TEXT NOT NULL,
+  city TEXT NOT NULL
+);
+
+
+Também foi criado um índice para o nome dos contatos:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_contacts_name
+ON contacts(name);
+```
+
+ Busca diretamente no SQL
+
+A filtragem dos contatos é realizada no próprio banco de dados:
+
+```sql
+SELECT id, name, farm, city
+FROM contacts
+WHERE name LIKE ?
+ORDER BY name COLLATE NOCASE, id
+LIMIT ? OFFSET ?
+```
+
+Dessa forma, a aplicação não precisa carregar os 5.248 contatos para a memória antes de realizar a pesquisa.
+
+ Paginação
+
+Os contatos são carregados em páginas utilizando:
+
+ `pageSize`
+ `pageOffset`
+ `LIMIT`
+ `OFFSET`
+
+Isso permite carregar somente os registros necessários naquele momento.
+
+FlatList
+
+A interface utiliza `FlatList` para renderização eficiente dos contatos.
+
+Também são utilizadas configurações de otimização como:
+
+ `initialNumToRender`
+ `maxToRenderPerBatch`
+`windowSize`
+ `removeClippedSubviews`
+ `onEndReached`
+
+Essa abordagem reduz o uso desnecessário de memória e evita renderizar milhares de elementos simultaneamente.
+
+
+
+ GPS
+
+O aplicativo utiliza o `expo-location` para obter a localização atual do dispositivo.
+
+Durante o início da visita são registrados:
+
+ Latitude;
+ Longitude;
+ Precisão em metros;
+ Data e horário.
+
+O sistema também possui tratamento para situações em que o usuário não concede permissão ou o GPS não está disponível.
+
+ Registro fotográfico
+
+O aplicativo utiliza a câmera do dispositivo para registrar uma evidência da visita técnica.
+
+Fluxo:
+
+
+Iniciar visita
+      ↓
+Acessar câmera
+      ↓
+Registrar foto
+      ↓
+Associar foto à visita
+      ↓
+Finalizar visita
+      ↓
+Salvar registro
+
+
+A foto é associada ao registro da visita e apresentada posteriormente no histórico.
+
+Persistência local
+
+As visitas concluídas são armazenadas utilizando **AsyncStorage**, permitindo que os registros permaneçam disponíveis localmente.
+
+A chave utilizada para armazenamento é:
+
+
+@registro_visitas
+
+
+O armazenamento local também permite consultar o histórico sem depender de uma conexão com a internet.
+
+
+
+ Tratamento de erros
+
+O aplicativo possui tratamento para situações em que recursos do dispositivo não estejam disponíveis.
+
+Exemplos:
+
+ GPS sem permissão;
+ GPS indisponível;
+ Câmera sem permissão;
+ Falha ao acessar a câmera;
+ Falha ao obter localização;
+ Falha ao salvar uma visita;
+ Dados incompletos durante a finalização da visita.
+
+Em vez de encerrar a aplicação, o sistema apresenta mensagens amigáveis orientando o usuário sobre o problema.
+
+ Tecnologias utilizadas
+
+Tecnologia    Utilização                        
+ React Native   Desenvolvimento mobile            
+ Expo           Ambiente de desenvolvimento       
+ TypeScript     Tipagem e organização do código   
+ SQLite         Banco de dados local dos contatos 
+ AsyncStorage   Persistência local das visitas    
+ Expo Location  Localização GPS                   
+ Expo Camera    Registro fotográfico              
+ FlatList       Renderização eficiente das listas 
+ SQL           Busca e paginação dos contatos    
+
+
+
+ Como executar
+
+1. Clonar o repositório
+
+```bash
+git clone https://github.com/Juliaferreira2009/-Registro-de-Visitas-T-cnicas-Agr-colas.git
+```
+
+ 2. Entrar na pasta
+
+```bash
+cd registro-visitas
+```
+
+3. Instalar as dependências
+
+```bash
+npm install
+```
+ 4. Iniciar o Expo
+
+```bash
+npx expo start
+```
+
+Depois, abra o projeto utilizando o **Expo Go** em um dispositivo compatível.
+
+
+
+ Teste em dispositivo físico
+
+Para utilizar corretamente os recursos de hardware, recomenda-se testar em um dispositivo físico.
+
+O aplicativo utiliza:
+
+*GPS;
+ Câmera;
+ Armazenamento local.
+
+Ao executar pela primeira vez, o sistema poderá solicitar permissões para acessar a localização e a câmera.
+
+
+ Requisitos atendidos
+
+Requisitos funcionais
+
+RF01 — Histórico e persistência**
+
+As visitas concluídas são armazenadas localmente e podem ser consultadas posteriormente.
+
+RF02 — Indicador de precisão GPS**
+
+A precisão da localização é apresentada visualmente de acordo com a distância estimada pelo GPS.
+
+ Requisitos não funcionais
+
+RNF01 — Degradação graciosa**
+
+O aplicativo trata indisponibilidade de recursos como GPS e câmera sem causar encerramento inesperado.
+
+RNF02 — Interface responsiva**
+
+A interface foi desenvolvida utilizando componentes e estilos do React Native, permitindo adaptação a diferentes tamanhos de tela.
+
+
+
+ Desafio Senior
+
+O projeto foi desenvolvido considerando os requisitos de maior nível de dificuldade do desafio.
+
+ Volume de dados
+
+Mais de 5.000 contatos
+
+
+5.248 contatos
+
+
+Busca otimizada
+
+A pesquisa é realizada diretamente no SQLite através de consulta SQL.
+
+ Paginação
+
+Os registros são carregados progressivamente utilizando `LIMIT` e `OFFSET`.
+
+Renderização eficiente
+
+A aplicação utiliza `FlatList` com configurações de otimização para reduzir o consumo de memória e evitar problemas de desempenho.
+
+Arquitetura
+
+A separação entre interface, dados e banco de dados facilita a manutenção e evolução do projeto.
+
+
+ Fluxo principal
+
+
+Tela inicial
+     ↓
+Nova visita
+     ↓
+Selecionar produtor
+     ↓
+Buscar contato
+     ↓
+Iniciar visita
+     ↓
+Obter localização GPS
+     ↓
+Registrar foto
+     ↓
+Finalizar visita
+     ↓
+Salvar dados localmente
+     ↓
+Histórico de visitas
+
+
+ Status
+
+Projeto funcional e em desenvolvimento.
+
+Principais funcionalidades implementadas:
+
+ Tela inicial
+ Cadastro/listagem de contatos
+ Mais de 5.000 contatos
+ Busca SQL
+ Paginação FlatList otimizada
+ Seleção de produtor
+ Registro de visita
+ GPS
+ Indicador de precisão
+ Câmera
+ Registro fotográfico
+ Histórico de visitas
+ Tratamento de erros
+
